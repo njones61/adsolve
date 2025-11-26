@@ -1,0 +1,25 @@
+/* Control the maximum width of the content area */
+.wy-nav-content {
+    max-width: 1200px !important;  /* Adjust this value to change content width */
+}
+
+/* Alternative: Use percentage for responsive width */
+/* .wy-nav-content {
+    max-width: 90% !important;
+} */
+
+/* Alternative: Remove width restriction entirely for full width */
+/* .wy-nav-content {
+    max-width: 100% !important;
+} */
+
+/* Ensure math equations don't overflow */
+.math {
+    overflow-x: auto;
+}
+
+/* Add some spacing for better readability */
+.wy-nav-content-wrap {
+    padding: 1rem;
+}
+

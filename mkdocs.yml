@@ -1,0 +1,36 @@
+site_name: Advection-Diffusion Solver Documentation
+site_description: Documentation for 1D advection-diffusion solver for vertical soil column transport
+
+# Repository information (update if you have a GitHub repo)
+# repo_url: https://github.com/yourusername/adsolve
+# repo_name: yourusername/adsolve
+
+theme:
+  name: readthedocs
+
+markdown_extensions:
+  - attr_list
+  - sane_lists
+  - md_in_html
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js
+  - js/mathjax-config.js
+
+extra_css:
+  - css/custom.css
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+
+nav:
+  - Home: index.md
+  - Theory: theory.md
+

@@ -1,0 +1,6 @@
+mkdocs
+mkdocs-readthedocs-theme
+python-markdown-math
+pymdown-extensions
+mkdocstrings[python]
+

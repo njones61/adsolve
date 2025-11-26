@@ -1,10 +1,12 @@
 # Advection-Diffusion Solver
 
-Welcome to the documentation for the 1D advection-diffusion solver. This code was developed by Norm Jones [njones61@gmail.com](mailto:njones61@gmail.com).
+Welcome to the documentation for the 1D advection-diffusion solver.
 
 ## Overview
 
 This project implements a numerical solver for one-dimensional advection-diffusion problems in porous media. The solver is designed to simulate solute transport in a vertical column of soil beneath a lake, where upward groundwater flow interacts with downward diffusion from the lake.
+
+This code was developed by Norm Jones [njones61@gmail.com](mailto:njones61@gmail.com) and is hosted on the following github repo: [https://github.com/njones61/adsolve](https://github.com/njones61/adsolve).
 
 ## Features
 

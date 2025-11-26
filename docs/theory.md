@@ -22,11 +22,12 @@ The one-dimensional advection-diffusion equation for solute transport in porous 
 >>$\dfrac{\partial C}{\partial t} = D_{eff} \dfrac{\partial^2 C}{\partial z^2} + v \dfrac{\partial C}{\partial z}$
 
 where:
-- $C(z,t)$ is the solute concentration [M/L³]
-- $t$ is time [T]
-- $z$ is the vertical coordinate (positive downward) [L]
-- $D_{eff}$ is the effective dispersion coefficient [L²/T]
-- $v$ is the pore water velocity magnitude in the upward direction (positive for upward flow) [L/T]
+
+>>$C(z,t)$ i= the solute concentration [M/L³]<br>
+>>$t$ = time [T]<br>
+>>$z$ = the vertical coordinate (positive downward) [L]<br>
+>>$D_{eff}$ = the effective dispersion coefficient [L²/T]<br>
+>>$v$ = the pore water velocity magnitude in the upward direction (positive for upward flow) [L/T]
 
 **Note**: Since $z$ increases downward and flow is upward, the advection term has a positive sign. The velocity $v$ is defined as positive for upward flow.
 
@@ -37,9 +38,10 @@ The effective dispersion coefficient accounts for both molecular diffusion and m
 >>$D_{eff} = D_m + D_{mech}$
 
 where:
-- $D_m$ is the molecular diffusion coefficient [L²/T]
-- $D_{mech} = \alpha_L v$ is the mechanical dispersion coefficient [L²/T]
-- $\alpha_L$ is the longitudinal dispersivity [L]
+
+>>$D_m$ = the molecular diffusion coefficient [L²/T]<br>
+>>$D_{mech} = \alpha_L v$ = the mechanical dispersion coefficient [L²/T]<br>
+>>$\alpha_L$ = the longitudinal dispersivity [L]
 
 Alternatively, we can express the effective dispersion as:
 
@@ -52,22 +54,26 @@ The pore water velocity is related to the Darcy velocity by:
 >>$v = \dfrac{q}{\theta}$
 
 where:
-- $q$ is the Darcy velocity (specific discharge) [L/T]
-- $\theta$ is the porosity (dimensionless)
+
+>>$q$ = the Darcy velocity (specific discharge) [L/T]<br>
+>>$\theta$ = the porosity (dimensionless)
 
 The Darcy velocity can be calculated from the hydraulic gradient:
 
 >>$q = -K \dfrac{dh}{dz}$
 
 where:
-- $K$ is the hydraulic conductivity [L/T]
-- $h$ is the hydraulic head [L]
+
+>>$K$ = the hydraulic conductivity [L/T]<br>
+>>$h$ = the hydraulic head [L]
 
 For a constant upward gradient, we have:
 
 >>$q = K \dfrac{\Delta h}{L}$
 
-where $\Delta h$ is the head difference (positive for upward flow).
+where 
+
+>>$\Delta h$ = the head difference (positive for upward flow).
 
 ## Boundary Conditions
 
@@ -94,6 +100,7 @@ The initial concentration profile can be specified as:
 >>$C(z,0) = C_0(z)$
 
 Common choices include:
+
 - Constant initial concentration: $C_0(z) = C_{init}$
 - Linear interpolation: $C_0(z) = C_{lake} + (C_{gw} - C_{lake}) \dfrac{z}{L}$
 - Step function or other profiles
@@ -178,9 +185,10 @@ This leads to a tridiagonal system of equations:
 >>$-a_i C_{i-1}^{n+1} + b_i C_i^{n+1} - c_i C_{i+1}^{n+1} = C_i^n$
 
 where:
-- $a_i = \dfrac{\Delta t}{(\Delta z)^2} D_{eff}$
-- $b_i = 1 + \dfrac{2\Delta t}{(\Delta z)^2} D_{eff} + \dfrac{\Delta t}{\Delta z} v$
-- $c_i = \dfrac{\Delta t}{(\Delta z)^2} D_{eff} + \dfrac{\Delta t}{\Delta z} v$
+
+>>$a_i = \dfrac{\Delta t}{(\Delta z)^2} D_{eff}$<br>
+>>$b_i = 1 + \dfrac{2\Delta t}{(\Delta z)^2} D_{eff} + \dfrac{\Delta t}{\Delta z} v$<br>
+>>$c_i = \dfrac{\Delta t}{(\Delta z)^2} D_{eff} + \dfrac{\Delta t}{\Delta z} v$
 
 The implicit method is unconditionally stable but requires solving a linear system at each time step.
 
@@ -198,21 +206,28 @@ This also results in a tridiagonal system and is unconditionally stable with sec
 
 1. **Initialize**: Set $C_i^0 = C_0(z_i)$ for all $i$
 2. **Apply boundary conditions**: $C_0^n = C_{lake}$, $C_N^n = C_{gw}$ for all $n$
-3. **Time stepping**: For each time step $n$:<br>
-   - For each interior point $i = 1, 2, \ldots, N-1$:<br>
+3. **Time stepping**: 
 
->>$C_i^{n+1} = C_i^n + \Delta t \left[ D_{eff} \dfrac{C_{i+1}^n - 2C_i^n + C_{i-1}^n}{(\Delta z)^2} + v \dfrac{C_{i+1}^n - C_i^n}{\Delta z} \right]$
+>For each time step $n$:<br>
 
-   - Check stability condition
+>>For each interior point $i = 1, 2, \ldots, N-1$:<br>
+
+>>>>$C_i^{n+1} = C_i^n + \Delta t \left[ D_{eff} \dfrac{C_{i+1}^n - 2C_i^n + C_{i-1}^n}{(\Delta z)^2} + v \dfrac{C_{i+1}^n - C_i^n}{\Delta z} \right]$
+
+>>Check stability condition
+
 4. **Repeat** until desired time is reached
 
 ### For Implicit/Crank-Nicolson Method
 
 1. **Initialize**: Set $C_i^0 = C_0(z_i)$ for all $i$
-2. **Time stepping**: For each time step $n$:
-   - Set up tridiagonal system with boundary conditions
-   - Solve tridiagonal system (using Thomas algorithm or similar)
-   - Update $C_i^{n+1}$ for all $i$
+2. **Time stepping**: 
+
+>For each time step $n$:<br>
+>>Set up tridiagonal system with boundary conditions<br>
+>>Solve tridiagonal system (using Thomas algorithm or similar)<br>
+>>Update $C_i^{n+1}$ for all $i$
+
 3. **Repeat** until desired time is reached
 
 ## Key Parameters

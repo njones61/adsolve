@@ -76,7 +76,7 @@ def main():
     try:
         import matplotlib.pyplot as plt
         
-        plt.figure(figsize=(8, 10))
+        plt.figure(figsize=(6, 10))
         
         # Get initial condition
         from solve import initialize_concentration

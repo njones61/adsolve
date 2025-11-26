@@ -176,7 +176,7 @@ The solver will print:
 
 The generated plot shows:
 
-![Concentration Profile Evolution](images/concentration_profile.png){width=800px}
+![Concentration Profile Evolution](images/concentration_profile.png){width=600px}
 
 **Plot features:**
 - **Initial condition** (black dashed line): Uniform concentration at groundwater level

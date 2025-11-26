@@ -21,6 +21,7 @@ This project implements a numerical solver for one-dimensional advection-diffusi
 ## Documentation
 
 - [Theory](theory.md): Detailed description of the governing equations and finite difference solution methods
+- [Example](example.md): Complete working example with code and visualization
 
 ## Quick Start
 
@@ -102,6 +103,8 @@ This will:
 2. Print a summary of results and derived parameters
 3. Generate and display a plot showing the concentration profile evolution
 4. Save the plot as `concentration_profile.png`
+
+For a complete walkthrough with detailed code explanation and result interpretation, see the [Example](example.md) page.
 
 ### Time Stepping Methods
 

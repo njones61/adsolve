@@ -1,6 +1,6 @@
 # Advection-Diffusion Solver
 
-Welcome to the documentation for the 1D advection-diffusion solver.
+Welcome to the documentation for the 1D advection-diffusion solver. This code was developed by Norm Jones [njones61@gmail.com](mailto:njones61@gmail.com).
 
 ## Overview
 
@@ -28,9 +28,10 @@ This project implements a numerical solver for one-dimensional advection-diffusi
 ### Installation
 
 1. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+
+```bash
+pip install -r requirements.txt
+```
 
    Required packages:
    

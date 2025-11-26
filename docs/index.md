@@ -33,6 +33,7 @@ This project implements a numerical solver for one-dimensional advection-diffusi
    ```
 
    Required packages:
+   
    - `numpy` - Numerical computations
    - `scipy` - Tridiagonal system solver
    - `matplotlib` - Plotting (optional, for visualization)

@@ -38,7 +38,6 @@ ENV/
 Thumbs.db
 
 # Project specific
-concentration_profile.png
 site/
 *.pyc
 

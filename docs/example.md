@@ -167,6 +167,7 @@ The solver produces the following output:
 ### Expected Output
 
 The solver will print:
+
 - Solution progress and Péclet numbers
 - Final concentration values at key locations
 - Derived parameters (velocities, dispersion coefficients)
@@ -179,6 +180,7 @@ The generated plot shows:
 ![Concentration Profile Evolution](images/concentration_profile.png){width=600px}
 
 **Plot features:**
+
 - **Initial condition** (black dashed line): Uniform concentration at groundwater level
 - **Time snapshots** (colored lines): Concentration profiles at 60-day intervals
 - **Final state** (thick colored line): Concentration profile after 730 days

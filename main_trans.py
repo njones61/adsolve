@@ -1,49 +1,49 @@
 """
-Main script to run the 1D advection-diffusion solver.
+Main script to run the 1D advection-diffusion solver (transient).
 
 Test case: Vertical soil column under a lake with upward groundwater flow.
 """
 
 import numpy as np
-from solve import solve
+from solve import solve_trans, initialize_concentration
 
 
 def main():
-    """Run the test case."""
+    """Run the transient test case."""
     
     # Define input parameters
     params = {
         # Physical domain
         'L': 5.0,              # Column length [m]
-        'porosity': 0.6,         # Porosity [dimensionless]
+        'porosity': 0.6,       # Porosity [dimensionless]
         
         # Hydraulic parameters
-        'K': 0.01,              # Hydraulic conductivity [m/d]
-        'delta_h': 0.2,          # Head difference [m] (positive for upward flow)
+        'K': 0.01,             # Hydraulic conductivity [m/d]
+        'delta_h': 0.2,        # Head difference [m] (positive for upward flow)
         
         # Transport parameters
-        'D_m': 0.000175,         # Molecular diffusion coefficient [m²/d]
-        'alpha_L': 0.5,          # Longitudinal dispersivity [m]
+        'D_m': 0.000175,       # Molecular diffusion coefficient [m²/d]
+        'alpha_L': 0.5,        # Longitudinal dispersivity [m]
         
         # Boundary conditions
-        'C_lake': 285.0,         # Lake concentration at top [M/L³]
-        'C_gw': 20.0,            # Groundwater concentration at bottom [M/L³]
+        'C_lake': 285.0,       # Lake concentration at top [M/L³]
+        'C_gw': 20.0,          # Groundwater concentration at bottom [M/L³]
         
-        # Initial condition
-        'C_init': 20.0,          # Initial concentration (constant, same as C_gw) [M/L³]
+        # Initial condition (ignored by initializer; default is robust)
+        'C_init': 20.0,
         
         # Numerical parameters
-        'N': 100,                # Number of grid points
-        'delta_t': 1.0,          # Time step [d]
-        't_max': 730.0,          # Maximum time [d] (2 years)
+        'N': 100,              # Number of grid points
+        'delta_t': 1.0,        # Time step [d]
+        't_max': 730.0,        # Maximum time [d] (2 years)
         
         # Options
-        'save_history': False,   # Save full time history (set to True to save all time steps)
+        'save_history': False,   # Save full time history (set True to save all time steps)
         'output_interval': 60.0, # Save snapshot every N days (None to disable)
     }
     
-    # Run solver with Crank-Nicolson method (recommended)
-    result = solve(params, method='crank_nicolson', verbose=True)
+    # Run transient solver with Crank-Nicolson method (recommended)
+    result = solve_trans(params, method='crank_nicolson', verbose=True)
     
     # Extract results
     C = result['C']
@@ -57,7 +57,7 @@ def main():
     
     # Print summary
     print("\n" + "="*60)
-    print("SOLUTION SUMMARY")
+    print("TRANSIENT SOLUTION SUMMARY")
     print("="*60)
     print(f"Final time: {t[-1]:.2f} days")
     print(f"Concentration at top (z=0):     {C[0]:.2f}")
@@ -72,45 +72,38 @@ def main():
         print(f"\nSnapshots saved at {len(t_snapshots)} time points")
     print("="*60)
     
-    # Optional: Plot results (uncomment if matplotlib is available)
+    # Optional: Plot results (if matplotlib is available)
     try:
         import matplotlib.pyplot as plt
         
         plt.figure(figsize=(6, 10))
         
-        # Get initial condition
-        from solve import initialize_concentration
+        # Plot initial condition (from initializer)
         C_init = initialize_concentration(params)
-        
-        # Plot initial condition
         plt.plot(C_init, z, 'k--', linewidth=1.5, alpha=0.7, label='Initial (t=0)')
         
         # Plot snapshots if available
         if C_snapshots is not None and len(C_snapshots) > 0:
-            # Use a colormap for different times
             colors = plt.cm.viridis(np.linspace(0, 1, len(C_snapshots)))
-            
             for i, (C_snap, t_snap) in enumerate(zip(C_snapshots, t_snapshots)):
                 if i == len(C_snapshots) - 1:
-                    # Final state - make it more prominent
                     plt.plot(C_snap, z, color=colors[i], linewidth=2.5, 
-                            label=f't = {t_snap:.0f} d (final)')
+                             label=f't = {t_snap:.0f} d (final)')
                 else:
                     plt.plot(C_snap, z, color=colors[i], linewidth=1.5, 
-                            alpha=0.8, label=f't = {t_snap:.0f} d')
+                             alpha=0.8, label=f't = {t_snap:.0f} d')
         else:
-            # If no snapshots, just plot final state
             plt.plot(C, z, 'b-', linewidth=2, label=f'Final (t={t[-1]:.0f} d)')
         
         # Plot boundary concentrations
         plt.axvline(x=params['C_lake'], color='r', linestyle=':', 
-                   linewidth=1.5, alpha=0.7, label='Lake boundary')
+                    linewidth=1.5, alpha=0.7, label='Lake boundary')
         plt.axvline(x=params['C_gw'], color='g', linestyle=':', 
-                   linewidth=1.5, alpha=0.7, label='Groundwater boundary')
+                    linewidth=1.5, alpha=0.7, label='Groundwater boundary')
         
         plt.xlabel('Concentration [M/L³]')
         plt.ylabel('Depth z [m]')
-        plt.title('1D Advection-Diffusion: Concentration Profile Evolution')
+        plt.title('1D Advection-Diffusion: Transient Concentration Profile')
         plt.legend(loc='best', fontsize=9)
         plt.grid(True, alpha=0.3)
         plt.gca().invert_yaxis()  # Invert so z=0 is at top
@@ -126,4 +119,5 @@ def main():
 
 if __name__ == '__main__':
     result = main()
+
 

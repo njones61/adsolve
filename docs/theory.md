@@ -249,13 +249,49 @@ At steady state ($\partial C/\partial t = 0$), the governing equation becomes:
 
 >>$D_{eff} \dfrac{d^2 C}{dz^2} + v \dfrac{dC}{dz} = 0$
 
-With boundary conditions $C(0) = C_{lake}$ and $C(L) = C_{gw}$, the analytical solution is:
+### Derivation
+
+Let $G = \dfrac{dC}{dz}$. Then the steady ODE is:
+
+>>$D_{eff} \dfrac{dG}{dz} + v G = 0 \quad \Rightarrow \quad \dfrac{dG}{dz} = -\dfrac{v}{D_{eff}} G$
+
+Integrating:
+
+>>$G(z) = G(0)\, e^{-\frac{v}{D_{eff}} z}$
+
+Integrating once more:
+
+>>$C(z) = C(0) + \int_0^z G(\xi)\, d\xi = C(0) + \dfrac{D_{eff}}{v} G(0)\left(1 - e^{-\frac{v}{D_{eff}} z}\right)$
+
+Apply the Dirichlet boundary conditions $C(0) = C_{lake}$, $C(L) = C_{gw}$ to solve for $G(0)$:
+
+>>$C_{gw} = C_{lake} + \dfrac{D_{eff}}{v} G(0)\left(1 - e^{-\frac{v}{D_{eff}} L}\right)
+\;\Rightarrow\; G(0) = \dfrac{v}{D_{eff}} \dfrac{C_{gw} - C_{lake}}{1 - e^{-\frac{v}{D_{eff}} L}}$
+
+Substitute back to obtain the closed form:
 
 >>$C(z) = C_{lake} + (C_{gw} - C_{lake}) \dfrac{1 - e^{-Pe \dfrac{z}{L}}}{1 - e^{-Pe}}$
 
 where $Pe = \dfrac{vL}{D_{eff}}$ is the Péclet number for the entire domain.
 
-**Note**: For large Péclet numbers (advection-dominated), the concentration profile becomes steep near the top boundary. For small Péclet numbers (diffusion-dominated), the profile approaches a linear distribution.
+### Limiting cases
+
+- $Pe \to 0$ (diffusion-dominated): using a first-order expansion, the solution approaches a linear profile
+
+>>$C(z) \approx C_{lake} + (C_{gw} - C_{lake}) \dfrac{z}{L}$
+
+- $Pe \to \infty$ (advection-dominated upward flow): the profile transitions sharply near the top boundary with most of the domain close to $C_{gw}$.
+
+### Use in this package
+
+- The function `solve_ss(params)` computes the steady-state profile directly from the analytical solution above using the same parameter dictionary as the transient solver.
+- Time-related inputs such as `delta_t`, `t_max`, `save_history`, and `output_interval` are ignored.
+- The spatial grid is the same uniform grid used in the transient solver: $z_i = i\,\Delta z$ with $\Delta z = L/N$. The function returns:
+  - `C`: steady-state concentration on the grid
+  - `z`: grid coordinates
+  - `params`: the parameter dictionary augmented with derived quantities (e.g., `v`, `D_eff`, `Pe_global`)
+
+This analytical steady solution is also useful as a benchmark for verifying the transient numerical methods.
 
 This analytical solution can be used to verify the numerical solution.
 

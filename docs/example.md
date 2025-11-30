@@ -15,21 +15,21 @@ We simulate solute transport in a 5-meter vertical column of soil with the follo
 
 ## Complete Code Example
 
-The following is the complete `main.py` script:
+The following is the complete `main_trans.py` script:
 
 ```python
 """
-Main script to run the 1D advection-diffusion solver.
+Main script to run the 1D advection-diffusion solver (transient).
 
 Test case: Vertical soil column under a lake with upward groundwater flow.
 """
 
 import numpy as np
-from solve import solve
+from solve import solve_trans, initialize_concentration
 
 
 def main():
-    """Run the test case."""
+    """Run the transient test case."""
     
     # Define input parameters
     params = {
@@ -49,8 +49,8 @@ def main():
         'C_lake': 285.0,       # Lake concentration at top [M/L³]
         'C_gw': 20.0,          # Groundwater concentration at bottom [M/L³]
         
-        # Initial condition
-        'C_init': 20.0,        # Initial concentration (constant, same as C_gw) [M/L³]
+        # Initial condition (initializer uses a robust default)
+        'C_init': 20.0,
         
         # Numerical parameters
         'N': 100,              # Number of grid points
@@ -58,12 +58,12 @@ def main():
         't_max': 730.0,        # Maximum time [d] (2 years)
         
         # Options
-        'save_history': False,      # Save full time history (set to True to save all time steps)
-        'output_interval': 60.0,    # Save snapshot every N days (None to disable)
+        'save_history': False,   # Save full time history (set to True to save all time steps)
+        'output_interval': 60.0, # Save snapshot every N days (None to disable)
     }
     
-    # Run solver with Crank-Nicolson method (recommended)
-    result = solve(params, method='crank_nicolson', verbose=True)
+    # Run transient solver with Crank-Nicolson method (recommended)
+    result = solve_trans(params, method='crank_nicolson', verbose=True)
     
     # Extract results
     C = result['C']
@@ -77,7 +77,7 @@ def main():
     
     # Print summary
     print("\n" + "="*60)
-    print("SOLUTION SUMMARY")
+    print("TRANSIENT SOLUTION SUMMARY")
     print("="*60)
     print(f"Final time: {t[-1]:.2f} days")
     print(f"Concentration at top (z=0):     {C[0]:.2f}")
@@ -99,7 +99,6 @@ def main():
         plt.figure(figsize=(8, 10))
         
         # Get initial condition
-        from solve import initialize_concentration
         C_init = initialize_concentration(params)
         
         # Plot initial condition
@@ -114,19 +113,19 @@ def main():
                 if i == len(C_snapshots) - 1:
                     # Final state - make it more prominent
                     plt.plot(C_snap, z, color=colors[i], linewidth=2.5, 
-                            label=f't = {t_snap:.0f} d (final)')
+                             label=f't = {t_snap:.0f} d (final)')
                 else:
                     plt.plot(C_snap, z, color=colors[i], linewidth=1.5, 
-                            alpha=0.8, label=f't = {t_snap:.0f} d')
+                             alpha=0.8, label=f't = {t_snap:.0f} d')
         else:
             # If no snapshots, just plot final state
             plt.plot(C, z, 'b-', linewidth=2, label=f'Final (t={t[-1]:.0f} d)')
         
         # Plot boundary concentrations
         plt.axvline(x=params['C_lake'], color='r', linestyle=':', 
-                   linewidth=1.5, alpha=0.7, label='Lake boundary')
+                    linewidth=1.5, alpha=0.7, label='Lake boundary')
         plt.axvline(x=params['C_gw'], color='g', linestyle=':', 
-                   linewidth=1.5, alpha=0.7, label='Groundwater boundary')
+                    linewidth=1.5, alpha=0.7, label='Groundwater boundary')
         
         plt.xlabel('Concentration [M/L³]')
         plt.ylabel('Depth z [m]')
@@ -150,10 +149,10 @@ if __name__ == '__main__':
 
 ## Running the Example
 
-To run this example:
+To run this transient example:
 
 ```bash
-python main.py
+python main_trans.py
 ```
 
 ## Results
@@ -187,6 +186,16 @@ The generated plot shows:
 - **Boundary markers**: Vertical lines showing lake and groundwater concentrations
 
 The plot demonstrates how the concentration profile evolves from the initial uniform state toward a steady-state distribution, with the high-concentration lake water diffusing downward while being counteracted by upward advection from the groundwater.
+
+## Steady-State Example
+
+To compute and visualize only the steady-state profile analytically, run:
+
+```bash
+python main_ss.py
+```
+
+This produces a single steady-state curve and saves `concentration_profile_ss.png`.
 
 ## Interpretation
 

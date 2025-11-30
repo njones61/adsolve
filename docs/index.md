@@ -4,13 +4,18 @@ Welcome to the documentation for the 1D advection-diffusion solver.
 
 ## Overview
 
-This project implements a numerical solver for one-dimensional advection-diffusion problems in porous media. The solver is designed to simulate solute transport in a vertical column of soil beneath a lake, where upward groundwater flow interacts with downward diffusion from the lake.
+This project implements solvers for one-dimensional advection-diffusion problems in porous media. It supports:
+- Transient numerical simulation (finite differences) of concentration profile evolution
+- Analytical steady-state solution for the same boundary value problem
+
+The solver is designed to simulate solute transport in a vertical column of soil beneath a lake, where upward groundwater flow interacts with downward diffusion from the lake.
 
 This code was developed by Norm Jones [njones61@gmail.com](mailto:njones61@gmail.com) and is hosted on the following github repo: [https://github.com/njones61/adsolve](https://github.com/njones61/adsolve).
 
 ## Features
 
-- **1D Advection-Diffusion Solver**: Numerical solution using finite difference methods
+- **Transient solver**: Numerical solution using finite difference methods (explicit, implicit, Crank–Nicolson)
+- **Steady-state solver**: Closed-form analytical solution with Dirichlet boundaries
 - **Flexible Parameters**: Test various scenarios including:
   - Head differences
   - Concentration differences
@@ -20,10 +25,15 @@ This code was developed by Norm Jones [njones61@gmail.com](mailto:njones61@gmail
   - Hydraulic conductivity
   - Longitudinal dispersivity
 
+### Solution modes
+- Use `solve_trans(params, method=...)` for time-dependent simulations and snapshots
+- Use `solve_ss(params)` for the analytical steady-state profile (ignores time parameters)
+
 ## Documentation
 
 - [Theory](theory.md): Detailed description of the governing equations and finite difference solution methods
 - [Example](example.md): Complete working example with code and visualization
+- [API](api.md): Auto-generated API reference (mkdocstrings)
 
 ## Quick Start
 
@@ -46,7 +56,7 @@ pip install -r requirements.txt
 The solver uses a dictionary-based parameter system. Here's a minimal example:
 
 ```python
-from solve import solve
+from solve import solve_trans, solve_ss
 
 # Define input parameters
 params = {
@@ -64,10 +74,7 @@ params = {
     
     # Boundary conditions
     'C_lake': 285.0,       # Lake concentration at top [M/L³]
-    'C_gw': 20.0,         # Groundwater concentration at bottom [M/L³]
-    
-    # Initial condition
-    'C_init': 20.0,        # Initial concentration [M/L³]
+    'C_gw': 20.0,          # Groundwater concentration at bottom [M/L³]
     
     # Numerical parameters
     'N': 100,              # Number of grid points
@@ -78,8 +85,8 @@ params = {
     'output_interval': 60.0,  # Save snapshot every N days
 }
 
-# Run solver
-result = solve(params, method='crank_nicolson', verbose=True)
+# Transient solver
+result = solve_trans(params, method='crank_nicolson', verbose=True)
 
 # Access results
 C = result['C']           # Final concentration profile
@@ -93,12 +100,40 @@ if 'C_snapshots' in result:
     t_snapshots = result['t_snapshots']   # List of snapshot times
 ```
 
+For the steady-state analytical solution, use:
+
+```python
+from solve import solve_ss
+
+params = {
+    'L': 5.0,
+    'porosity': 0.6,
+    'K': 0.01,
+    'delta_h': 0.2,
+    'D_m': 0.000175,
+    'alpha_L': 0.5,
+    'C_lake': 285.0,
+    'C_gw': 20.0,
+    'N': 100,
+}
+
+result_ss = solve_ss(params, verbose=True)
+C_ss = result_ss['C']
+z = result_ss['z']
+```
+
 ### Running the Example
 
 Run the included test case:
 
 ```bash
-python main.py
+python main_trans.py
+```
+
+Run the steady-state example:
+
+```bash
+python main_ss.py
 ```
 
 This will:

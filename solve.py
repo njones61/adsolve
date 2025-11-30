@@ -71,12 +71,12 @@ def calculate_derived_parameters(params):
 
 def initialize_concentration(params):
     """
-    Initialize the concentration profile.
+    Initialize the concentration profile (default, simple choice).
     
     Parameters
     ----------
     params : dict
-        Dictionary containing parameters including initial condition specification
+        Dictionary containing parameters including boundary concentrations
         
     Returns
     -------
@@ -84,7 +84,6 @@ def initialize_concentration(params):
         Initial concentration array of size N+1
     """
     N = params['N']
-    C_init = params.get('C_init', None)
     C_gw = params['C_gw']
     C_lake = params['C_lake']
     L = params['L']
@@ -93,23 +92,8 @@ def initialize_concentration(params):
     # Create spatial grid
     z = np.linspace(0, L, N + 1)
     
-    # Initialize concentration array
-    C = np.zeros(N + 1)
-    
-    # Set initial condition
-    if C_init is not None:
-        # Constant initial concentration
-        if isinstance(C_init, (int, float)):
-            C[:] = C_init
-        # Function for initial profile
-        elif callable(C_init):
-            C = C_init(z)
-        # Array of initial values
-        elif isinstance(C_init, np.ndarray):
-            C = C_init.copy()
-    else:
-        # Default: use groundwater concentration everywhere
-        C[:] = C_gw
+    # Simple, robust default: start uniform at groundwater concentration
+    C = np.full(N + 1, C_gw, dtype=float)
     
     # Apply boundary conditions at t=0
     C[0] = C_lake
@@ -352,9 +336,9 @@ def check_stability(params):
     return is_stable, max_delta_t
 
 
-def solve(params, method='crank_nicolson', verbose=True):
+def solve_trans(params, method='crank_nicolson', verbose=True):
     """
-    Solve the 1D advection-diffusion problem.
+    Solve the 1D advection-diffusion problem (transient).
     
     Parameters
     ----------
@@ -490,4 +474,73 @@ def solve(params, method='crank_nicolson', verbose=True):
         print("Solution complete!")
     
     return result
+
+
+def solve_ss(params, verbose=True):
+    """
+    Compute the steady-state solution to the 1D advection-diffusion equation
+    with Dirichlet boundary conditions using the analytical expression.
+    
+    Parameters
+    ----------
+    params : dict
+        Dictionary containing all input parameters. Time-related parameters
+        (e.g., 'delta_t', 't_max') are ignored.
+    verbose : bool, optional
+        Print summary information (default: True)
+    
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        - 'C': steady concentration array [N+1]
+        - 'z': spatial grid [N+1]
+        - 'params': updated parameters dictionary (with derived values)
+    """
+    # Calculate derived parameters
+    params = calculate_derived_parameters(params)
+    
+    # Extract needed parameters
+    N = params['N']
+    L = params['L']
+    D_eff = params['D_eff']
+    v = params['v']
+    C_lake = params['C_lake']
+    C_gw = params['C_gw']
+    
+    # Spatial grid
+    z = np.linspace(0, L, N + 1)
+    
+    # Global Péclet number
+    Pe = v * L / D_eff if D_eff != 0 else np.inf
+    params['Pe_global'] = Pe
+    
+    # Handle small Pe with linear limit to avoid 0/0
+    if np.isfinite(Pe) and abs(Pe) < 1e-10:
+        # Linear interpolation between boundaries
+        C = C_lake + (C_gw - C_lake) * (z / L)
+    else:
+        # General analytical solution
+        # Avoid numerical issues if denominator is tiny
+        denom = 1.0 - np.exp(-Pe)
+        # If denom is too small, fall back to linear
+        if not np.isfinite(denom) or abs(denom) < 1e-14:
+            C = C_lake + (C_gw - C_lake) * (z / L)
+        else:
+            C = C_lake + (C_gw - C_lake) * (1.0 - np.exp(-Pe * z / L)) / denom
+    
+    # Enforce boundary values exactly
+    C[0] = C_lake
+    C[-1] = C_gw
+    
+    if verbose:
+        print("Steady-state solution computed.")
+        print(f"Grid points: {N+1}")
+        print(f"Péclet number (global): {params['Pe_global']:.6f}")
+    
+    return {
+        'C': C,
+        'z': z,
+        'params': params
+    }
 

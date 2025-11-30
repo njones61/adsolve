@@ -23,3 +23,21 @@
     padding: 1rem;
 }
 
+/* mkdocstrings: add space after the collapsible "Source code in ..." block */
+/* Try specific classes first; fall back to broader selectors if templates differ */
+details.doc-source {
+    margin-bottom: 0.8rem;
+}
+.docstring > details {
+    margin-bottom: 0.8rem;
+}
+.mkdocstrings details {
+    margin-bottom: 0.8rem;
+}
+
+/* ReadTheDocs theme: ensure spacing applies in common containers */
+.rst-content details,
+.wy-nav-content details {
+    margin-bottom: 0.8rem !important;
+}
+

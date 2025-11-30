@@ -29,9 +29,13 @@ plugins:
       handlers:
         python:
           paths: [.]
+          options:
+            docstring_style: numpy
+            show_source: true
 
 nav:
   - Home: index.md
   - Theory: theory.md
   - Example: example.md
+  - API: api.md
 

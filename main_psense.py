@@ -64,7 +64,7 @@ def run_sensitivity_analysis(param_name, param_min, param_max, n_runs,
             'C_init': 20.0,          # Initial concentration (constant, same as C_gw) [M/L³]
             
             # Solute specie
-            'specie': 'chloride',
+            'specie': 'Cl-',
             
             # Numerical parameters
             'N': 100,                # Number of grid points
@@ -121,7 +121,7 @@ def run_sensitivity_analysis(param_name, param_min, param_max, n_runs,
         'z': z,
         'param_name': param_name,
         't_max': base_params['t_max'],
-        'specie': base_params.get('specie', 'chloride')
+        'specie': base_params.get('specie', 'Cl-')
     }
 
 
@@ -141,7 +141,7 @@ def plot_sensitivity_results(results, save=False):
     z = results['z']
     param_name = results['param_name']
     t_max = results['t_max']
-    specie = str(results.get('specie', 'chloride')).title()
+    specie = str(results.get('specie', 'Cl-')).title()
     
     # Create figure
     plt.figure(figsize=(6, 10))

@@ -32,6 +32,9 @@ def main():
         # Initial condition (ignored by initializer; default is robust)
         'C_init': 20.0,
         
+        # Solute specie
+        'specie': 'Cl-',
+        
         # Numerical parameters
         'N': 100,              # Number of grid points
         'delta_t': 1.0,        # Time step [d]
@@ -78,22 +81,40 @@ def main():
         
         plt.figure(figsize=(6, 10))
         
+        # Determine plotting depth
+        depth_limit = params.get('plot_depth', params.get('L', None))
+        if depth_limit is None:
+            depth_limit = z[-1]
+        try:
+            depth_limit = float(depth_limit)
+        except Exception:
+            depth_limit = z[-1]
+        L_val = params.get('L', z[-1])
+        try:
+            L_val = float(L_val)
+        except Exception:
+            L_val = z[-1]
+        if depth_limit <= 0 or depth_limit > L_val:
+            depth_limit = L_val
+        mask = z <= depth_limit
+        z_plot = z[mask]
+        
         # Plot initial condition (from initializer)
         C_init = initialize_concentration(params)
-        plt.plot(C_init, z, 'k--', linewidth=1.5, alpha=0.7, label='Initial (t=0)')
+        plt.plot(C_init[mask], z_plot, 'k--', linewidth=1.5, alpha=0.7, label='Initial (t=0)')
         
         # Plot snapshots if available
         if C_snapshots is not None and len(C_snapshots) > 0:
             colors = plt.cm.viridis(np.linspace(0, 1, len(C_snapshots)))
             for i, (C_snap, t_snap) in enumerate(zip(C_snapshots, t_snapshots)):
                 if i == len(C_snapshots) - 1:
-                    plt.plot(C_snap, z, color=colors[i], linewidth=2.5, 
+                    plt.plot(C_snap[mask], z_plot, color=colors[i], linewidth=2.5, 
                              label=f't = {t_snap:.0f} d (final)')
                 else:
-                    plt.plot(C_snap, z, color=colors[i], linewidth=1.5, 
+                    plt.plot(C_snap[mask], z_plot, color=colors[i], linewidth=1.5, 
                              alpha=0.8, label=f't = {t_snap:.0f} d')
         else:
-            plt.plot(C, z, 'b-', linewidth=2, label=f'Final (t={t[-1]:.0f} d)')
+            plt.plot(C[mask], z_plot, 'b-', linewidth=2, label=f'Final (t={t[-1]:.0f} d)')
         
         # Plot boundary concentrations
         plt.axvline(x=params['C_lake'], color='r', linestyle=':', 
@@ -103,10 +124,12 @@ def main():
         
         plt.xlabel('Concentration [M/L³]')
         plt.ylabel('Depth z [m]')
-        plt.title('1D Advection-Diffusion: Transient Concentration Profile')
+        specie_name = str(params.get('specie', 'chloride')).title()
+        plt.title(f'1D Advection-Diffusion: Transient Concentration Profile ({specie_name})')
         plt.legend(loc='best', fontsize=9)
         plt.grid(True, alpha=0.3)
         plt.gca().invert_yaxis()  # Invert so z=0 is at top
+        plt.ylim(depth_limit, 0)
         plt.tight_layout()
         plt.savefig('concentration_profile.png', dpi=150)
         plt.show()

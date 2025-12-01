@@ -18,7 +18,7 @@ def run_sensitivity_analysis(param_name, param_min, param_max, n_runs,
     Parameters
     ----------
     param_name : str
-        Name of the parameter to vary (e.g., 'delta_h', 'K', 'D_m')
+        Name of the parameter to vary (e.g., 'v', 'D_m')
     param_min : float
         Minimum value for the parameter
     param_max : float
@@ -46,11 +46,9 @@ def run_sensitivity_analysis(param_name, param_min, param_max, n_runs,
         base_params = {
             # Physical domain
             'L':5.0,              # Column length [m]
-            'porosity': 0.6,         # Porosity [dimensionless]
             
             # Hydraulic parameters
-            'K': 0.01,              # Hydraulic conductivity [m/d]
-            'delta_h': 0.2,          # Head difference [m] (positive for upward flow)
+            'v': 0.000667,          # Seepage velocity (pore water velocity) [m/d]
             
             # Transport parameters
             'D_m': 0.000175,         # Molecular diffusion coefficient [m²/d]
@@ -172,9 +170,9 @@ def plot_sensitivity_results(results, save=False):
 
 
 def main():
-    """Run sensitivity analysis for delta_h parameter."""
+    """Run sensitivity analysis for a selected parameter."""
     
-    # Test case: vary delta_h from 0.1 to 10 in 10 increments
+    # Test case: vary D_m parameter
     results = run_sensitivity_analysis(
         param_name='D_m',
         param_min=0.00001,

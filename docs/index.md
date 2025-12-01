@@ -17,12 +17,10 @@ This code was developed by Norm Jones [njones61@gmail.com](mailto:njones61@gmail
 - **Transient solver**: Numerical solution using finite difference methods (explicit, implicit, Crank–Nicolson)
 - **Steady-state solver**: Closed-form analytical solution with Dirichlet boundaries
 - **Flexible Parameters**: Test various scenarios including:
-  - Head differences
+  - Seepage velocity
   - Concentration differences
   - Dispersion coefficients (molecular diffusion + mechanical dispersion)
-  - Porosity
   - Column length
-  - Hydraulic conductivity
   - Longitudinal dispersivity
 
 ### Solution modes
@@ -62,11 +60,9 @@ from solve import solve_trans, solve_ss
 params = {
     # Physical domain
     'L': 5.0,              # Column length [m]
-    'porosity': 0.6,       # Porosity [dimensionless]
     
     # Hydraulic parameters
-    'K': 0.01,             # Hydraulic conductivity [m/d]
-    'delta_h': 0.2,        # Head difference [m] (positive for upward flow)
+    'v': 0.000667,         # Seepage velocity (pore water velocity) [m/d]
     
     # Transport parameters
     'D_m': 0.000175,       # Molecular diffusion coefficient [m²/d]
@@ -107,9 +103,7 @@ from solve import solve_ss
 
 params = {
     'L': 5.0,
-    'porosity': 0.6,
-    'K': 0.01,
-    'delta_h': 0.2,
+    'v': 0.000667,         # Seepage velocity (pore water velocity) [m/d]
     'D_m': 0.000175,
     'alpha_L': 0.5,
     'C_lake': 285.0,

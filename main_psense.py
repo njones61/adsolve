@@ -46,11 +46,9 @@ def run_sensitivity_analysis(param_name, param_min, param_max, n_runs,
         base_params = {
             # Physical domain
             'L':5.0,              # Column length [m]
-            'porosity': 0.6,         # Porosity [dimensionless]
             
             # Hydraulic parameters
-            'K': 0.01,              # Hydraulic conductivity [m/d]
-            'delta_h': 0.2,          # Head difference [m] (positive for upward flow)
+            'v': 0.000667,          # Seepage velocity (pore water velocity) [m/d]
             
             # Transport parameters
             'D_m': 0.000175,         # Molecular diffusion coefficient [m²/d]

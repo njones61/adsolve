@@ -6,8 +6,8 @@ This example demonstrates a complete workflow for solving a 1D advection-diffusi
 
 We simulate solute transport in a 5-meter vertical column of soil with the following conditions:
 
-- **Physical domain**: 5 m column with 60% porosity
-- **Hydraulic conditions**: Upward flow with 0.2 m head difference
+- **Physical domain**: 5 m column
+- **Hydraulic conditions**: Upward flow with seepage velocity of 0.000667 m/d
 - **Transport**: Molecular diffusion and mechanical dispersion
 - **Boundary conditions**: High concentration in lake (285), low in groundwater (20)
 - **Initial condition**: Uniform concentration equal to groundwater (20)
@@ -35,11 +35,9 @@ def main():
     params = {
         # Physical domain
         'L': 5.0,              # Column length [m]
-        'porosity': 0.6,       # Porosity [dimensionless]
         
         # Hydraulic parameters
-        'K': 0.01,             # Hydraulic conductivity [m/d]
-        'delta_h': 0.2,        # Head difference [m] (positive for upward flow)
+        'v': 0.000667,         # Seepage velocity (pore water velocity) [m/d]
         
         # Transport parameters
         'D_m': 0.000175,       # Molecular diffusion coefficient [m²/d]
@@ -84,8 +82,7 @@ def main():
     print(f"Concentration at bottom (z=L): {C[-1]:.2f}")
     print(f"Concentration at midpoint:     {C[len(C)//2]:.2f}")
     print(f"\nDerived parameters:")
-    print(f"  Darcy velocity (q):           {params['q']:.6f} m/d")
-    print(f"  Pore water velocity (v):      {params['v']:.6f} m/d")
+    print(f"  Seepage velocity (v):         {params['v']:.6f} m/d")
     print(f"  Effective dispersion (D_eff): {params['D_eff']:.6f} m²/d")
     print(f"  Péclet number (global):      {params['Pe_global']:.4f}")
     if C_snapshots is not None:

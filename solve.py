@@ -20,7 +20,7 @@ def calculate_derived_parameters(params):
     Parameters
     ----------
     params : dict
-        Dictionary containing input parameters
+        Dictionary containing input parameters. Must include 'v' (seepage velocity).
         
     Returns
     -------
@@ -29,21 +29,13 @@ def calculate_derived_parameters(params):
     """
     # Extract input parameters
     L = params['L']
-    theta = params['porosity']
-    K = params['K']
-    delta_h = params['delta_h']
+    v = params['v']  # Seepage velocity (pore water velocity) [m/d]
     D_m = params['D_m']
     alpha_L = params['alpha_L']
     N = params['N']
     
     # Calculate grid spacing
     delta_z = L / N
-    
-    # Calculate Darcy velocity
-    q = K * delta_h / L
-    
-    # Calculate pore water velocity
-    v = q / theta
     
     # Calculate mechanical dispersion
     D_mech = alpha_L * v
@@ -59,7 +51,6 @@ def calculate_derived_parameters(params):
     
     # Add calculated parameters to dictionary
     params['delta_z'] = delta_z
-    params['q'] = q
     params['v'] = v
     params['D_mech'] = D_mech
     params['D_eff'] = D_eff

@@ -49,6 +49,8 @@ Alternatively, we can express the effective dispersion as:
 
 ### Pore Water Velocity
 
+**Note**: The solver accepts the seepage velocity (pore water velocity) $v$ directly as an input parameter. However, if you have hydraulic parameters instead, you can calculate $v$ as described below.
+
 The pore water velocity is related to the Darcy velocity by:
 
 >>$v = \dfrac{q}{\theta}$
@@ -74,6 +76,12 @@ For a constant upward gradient, we have:
 where 
 
 >>$\Delta h$ = the head difference (positive for upward flow).
+
+Combining these relationships, the seepage velocity can be calculated from hydraulic parameters as:
+
+>>$v = \dfrac{K \Delta h}{\theta L}$
+
+This formula allows you to compute $v$ if you have measurements of hydraulic conductivity, head difference, porosity, and column length.
 
 ## Boundary Conditions
 
@@ -234,14 +242,16 @@ This also results in a tridiagonal system and is unconditionally stable with sec
 
 The following parameters can be varied to test different scenarios:
 
-1. **Head difference** ($\Delta h$): Controls the upward flow velocity
+1. **Seepage velocity** ($v$): Direct input for pore water velocity (controls advection)
 2. **Concentration difference** ($C_{lake} - C_{gw}$): Drives the diffusion process
 3. **Dispersion coefficient** ($D_{eff}$): Combines molecular diffusion and mechanical dispersion
-4. **Porosity** ($\theta$): Affects the pore water velocity
-5. **Column length** ($L$): Domain size
-6. **Hydraulic conductivity** ($K$): Controls flow rate for given head gradient
-7. **Longitudinal dispersivity** ($\alpha_L$): Controls mechanical dispersion
-8. **Molecular diffusion coefficient** ($D_m$): Base diffusion rate
+4. **Column length** ($L$): Domain size
+5. **Longitudinal dispersivity** ($\alpha_L$): Controls mechanical dispersion
+6. **Molecular diffusion coefficient** ($D_m$): Base diffusion rate
+
+**Note**: The seepage velocity $v$ can be calculated from hydraulic parameters if needed:
+- From Darcy velocity and porosity: $v = q/\theta$
+- From hydraulic conductivity, head difference, and porosity: $v = (K \Delta h / L) / \theta$
 
 ## Steady-State Solution
 
@@ -304,16 +314,22 @@ The following table summarizes all variables required to set up and run the 1D a
 | Variable | Symbol | Description | Units | Required |
 |----------|--------|-------------|-------|----------|
 | Column length | $L$ | Length of the vertical soil column | [L] | Yes |
-| Porosity | $\theta$ | Volume fraction of pore space | Dimensionless | Yes |
 
 ### Hydraulic Parameters
 
 | Variable | Symbol | Description | Units | Required |
 |----------|--------|-------------|-------|----------|
-| Hydraulic conductivity | $K$ | Ability of porous media to transmit water | [L/T] | Yes |
-| Head difference | $\Delta h$ | Hydraulic head difference (positive for upward flow) | [L] | Yes |
-| Darcy velocity | $q$ | Specific discharge, calculated as $q = K \dfrac{\Delta h}{L}$ | [L/T] | Calculated |
-| Pore water velocity | $v$ | Average linear velocity, calculated as $v = \dfrac{q}{\theta}$ | [L/T] | Calculated |
+| Seepage velocity | $v$ | Pore water velocity (average linear velocity) | [L/T] | Yes |
+
+**Note**: The seepage velocity $v$ can be calculated from other hydraulic parameters if you have them:
+- From Darcy velocity and porosity: $v = \dfrac{q}{\theta}$
+- From hydraulic conductivity, head difference, and porosity: $v = \dfrac{K \Delta h / L}{\theta} = \dfrac{K \Delta h}{\theta L}$
+  
+  where:
+  - $K$ = hydraulic conductivity [L/T]
+  - $\Delta h$ = head difference (positive for upward flow) [L]
+  - $\theta$ = porosity (dimensionless)
+  - $q = K \dfrac{\Delta h}{L}$ = Darcy velocity [L/T]
 
 ### Transport Parameters
 

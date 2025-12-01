@@ -20,13 +20,11 @@ def main():
 
         # Physical domain
         'L': 5.0,              # Column length [m]
-        'porosity': 0.6,       # Porosity [dimensionless]
 
         'plot_depth': 1.0,     # Depth to plot concentration profile. If omitted, plot to L [m].
         
         # Hydraulic parameters
-        'K': 0.01,             # Hydraulic conductivity [m/d]
-        'delta_h': 0.2,        # Head difference [m] (positive for upward flow)
+        'v': 0.000667,         # Seepage velocity (pore water velocity) [m/d]
         
         # Transport parameters
         'D_m': 0.000175,       # Molecular diffusion coefficient [m²/d]
@@ -82,8 +80,7 @@ def main():
     print(f"Concentration at bottom (z=L): {C[-1]:.2f}")
     print(f"Concentration at midpoint:     {C[len(C)//2]:.2f}")
     print(f"\nDerived parameters:")
-    print(f"  Darcy velocity (q):           {params['q']:.6f} m/d")
-    print(f"  Pore water velocity (v):      {params['v']:.6f} m/d")
+    print(f"  Seepage velocity (v):         {params['v']:.6f} m/d")
     print(f"  Effective dispersion (D_eff): {params['D_eff']:.6f} m²/d")
     print(f"  Péclet number (global):      {params['Pe_global']:.4f}")
     print("="*60)

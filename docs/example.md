@@ -82,7 +82,6 @@ def main():
     print(f"Concentration at bottom (z=L): {C[-1]:.2f}")
     print(f"Concentration at midpoint:     {C[len(C)//2]:.2f}")
     print(f"\nDerived parameters:")
-    print(f"  Seepage velocity (v):         {params['v']:.6f} m/d")
     print(f"  Effective dispersion (D_eff): {params['D_eff']:.6f} m²/d")
     print(f"  Péclet number (global):      {params['Pe_global']:.4f}")
     if C_snapshots is not None:
@@ -126,7 +125,7 @@ def main():
         
         plt.xlabel('Concentration [M/L³]')
         plt.ylabel('Depth z [m]')
-        plt.title('1D Advection-Diffusion: Concentration Profile Evolution')
+        plt.title('Concentration Profile Evolution')
         plt.legend(loc='best', fontsize=9)
         plt.grid(True, alpha=0.3)
         plt.gca().invert_yaxis()  # Invert so z=0 is at top
@@ -166,7 +165,7 @@ The solver will print:
 
 - Solution progress and Péclet numbers
 - Final concentration values at key locations
-- Derived parameters (velocities, dispersion coefficients)
+- Derived parameters (dispersion coefficients, Péclet numbers)
 - Number of snapshots saved
 
 ### Visualization

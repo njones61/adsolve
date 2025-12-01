@@ -65,7 +65,6 @@ def main():
     print(f"Concentration at bottom (z=L): {C[-1]:.2f}")
     print(f"Concentration at midpoint:     {C[len(C)//2]:.2f}")
     print(f"\nDerived parameters:")
-    print(f"  Seepage velocity (v):         {params['v']:.6f} m/d")
     print(f"  Effective dispersion (D_eff): {params['D_eff']:.6f} m²/d")
     print(f"  Péclet number (global):      {params['Pe_global']:.4f}")
     if C_snapshots is not None:
@@ -122,7 +121,7 @@ def main():
         plt.xlabel('Concentration [M/L³]')
         plt.ylabel('Depth z [m]')
         specie_name = str(params.get('specie', 'chloride')).title()
-        plt.title(f'1D Advection-Diffusion: Transient Concentration Profile ({specie_name})')
+        plt.title(f'Transient Concentration Profile ({specie_name})')
         plt.legend(loc='best', fontsize=9)
         plt.grid(True, alpha=0.3)
         plt.gca().invert_yaxis()  # Invert so z=0 is at top

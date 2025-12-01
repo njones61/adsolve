@@ -16,7 +16,7 @@ def main():
     params = {
 
         # Solute specie (for plotting, data access)
-        'specie': 'Sulfate',
+        'specie': 'Cl-',
 
         # Physical domain
         'L': 5.0,              # Column length [m]
@@ -27,17 +27,20 @@ def main():
         'v': 0.000667,         # Seepage velocity (pore water velocity) [m/d]
         
         # Transport parameters
-        'D_m': 0.0000175,       # Molecular diffusion coefficient [m²/d]
-        'alpha_L': 0.2,        # Longitudinal dispersivity [m]
+        'D_m': 0.000175,       # Molecular diffusion coefficient [m²/d]
+        'alpha_L': 0.5,        # Longitudinal dispersivity [m]
         
         # Boundary conditions
-        'C_lake': 350.0,       # Lake concentration at top [M/L³]
+        'C_lake': 285.0,       # Lake concentration at top [M/L³]
         'C_gw': 20.0,          # Groundwater concentration at bottom [M/L³]
         
         # Numerical parameters
         'N': 100,              # Number of grid points
     
-
+        
+        # Time parameters (ignored)
+        'delta_t': 1.0,
+        't_max': 730.0,
     }
     
     # Attempt to read observed concentration data from Excel first

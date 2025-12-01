@@ -535,3 +535,342 @@ def solve_ss(params, verbose=True):
         'params': params
     }
 
+
+def calculate_rmse(params, observed_pd, depth_limit=None):
+    """
+    Calculate RMSE between simulated and observed concentrations.
+    
+    Parameters
+    ----------
+    params : dict
+        Dictionary containing all input parameters
+    observed_pd : pandas.DataFrame
+        DataFrame with observed data, indexed by depth [m]
+    depth_limit : float, optional
+        Maximum depth to consider for RMSE calculation
+        
+    Returns
+    -------
+    float
+        RMSE value, or None if calculation fails
+    """
+    try:
+        # Compute steady-state solution
+        result = solve_ss(params, verbose=False)
+        C = result['C']
+        z = result['z']
+        params = result['params']
+        
+        # Get specie name
+        specie_val = params.get('specie')
+        specie_label = str(specie_val).strip() if isinstance(specie_val, str) else None
+        
+        if not specie_label or observed_pd is None:
+            return None
+        
+        # Match column name
+        obs_col = None
+        if specie_label in observed_pd.columns:
+            obs_col = specie_label
+        else:
+            lowered = {c.lower(): c for c in observed_pd.columns}
+            if specie_label.lower() in lowered:
+                obs_col = lowered[specie_label.lower()]
+        
+        if obs_col is None:
+            return None
+        
+        # Determine depth limit
+        if depth_limit is None:
+            depth_limit = params.get('plot_depth', params.get('L', z[-1]))
+        try:
+            depth_limit = float(depth_limit)
+        except Exception:
+            depth_limit = z[-1]
+        
+        L_val = params.get('L', z[-1])
+        try:
+            L_val = float(L_val)
+        except Exception:
+            L_val = z[-1]
+        
+        if depth_limit <= 0 or depth_limit > L_val:
+            depth_limit = L_val
+        
+        # Slice model arrays to requested depth
+        mask = z <= depth_limit
+        z_plot = z[mask]
+        C_plot = C[mask]
+        
+        # Restrict observed points to depth_limit
+        observed_slice = observed_pd[observed_pd.index <= depth_limit]
+        observed_slice = observed_slice[[obs_col]].dropna()
+        
+        if len(observed_slice) == 0:
+            return None
+        
+        obs_depths = observed_slice.index.values.astype(float)
+        obs_values = observed_slice[obs_col].values.astype(float)
+        
+        # Interpolate simulated profile to observation depths
+        try:
+            from scipy.interpolate import PchipInterpolator
+            interp_fn = PchipInterpolator(z_plot, C_plot, extrapolate=False)
+            sim_at_obs = interp_fn(obs_depths)
+        except Exception:
+            sim_at_obs = np.interp(obs_depths, z_plot, C_plot)
+        
+        # Compute RMSE over valid pairs
+        valid_mask = np.isfinite(sim_at_obs) & np.isfinite(obs_values)
+        if not valid_mask.any():
+            return None
+        
+        diffs = sim_at_obs[valid_mask] - obs_values[valid_mask]
+        rmse_value = float(np.sqrt(np.mean(diffs**2)))
+        
+        return rmse_value
+    except Exception as exc:
+        return None
+
+
+def calculate_parameter_sensitivities(params_optimal, observed_pd, param_names, 
+                                       param_indices, rmse_optimal, perturbation=0.01):
+    """
+    Calculate parameter sensitivities (partial derivatives of RMSE with respect to each parameter).
+    
+    Parameters
+    ----------
+    params_optimal : dict
+        Dictionary containing optimal parameter values
+    observed_pd : pandas.DataFrame
+        DataFrame with observed data, indexed by depth [m]
+    param_names : list
+        List of parameter names being optimized
+    param_indices : dict
+        Dictionary mapping parameter names to their indices
+    rmse_optimal : float
+        Optimal RMSE value
+    perturbation : float, optional
+        Relative perturbation for finite difference calculation (default: 0.01 = 1%)
+        
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        - 'absolute_sensitivities': absolute change in RMSE per unit change in parameter
+        - 'relative_sensitivities': relative change in RMSE per 1% change in parameter
+        - 'normalized_sensitivities': normalized sensitivities (sum to 1)
+    """
+    sensitivities_abs = {}
+    sensitivities_rel = {}
+    
+    for name in param_names:
+        # Get current optimal value
+        p_opt = params_optimal[name]
+        
+        # Calculate perturbation (use absolute or relative, whichever is larger)
+        # to avoid issues with very small parameters
+        abs_pert = max(abs(p_opt * perturbation), abs(p_opt) * 1e-6)
+        
+        # Forward difference
+        params_forward = params_optimal.copy()
+        params_forward[name] = p_opt + abs_pert
+        rmse_forward = calculate_rmse(params_forward, observed_pd)
+        
+        if rmse_forward is not None:
+            # Absolute sensitivity: d(RMSE)/d(parameter)
+            sens_abs = (rmse_forward - rmse_optimal) / abs_pert
+            sensitivities_abs[name] = sens_abs
+            
+            # Relative sensitivity: (d(RMSE)/RMSE) / (d(parameter)/parameter)
+            # This gives the % change in RMSE per 1% change in parameter
+            if rmse_optimal > 0 and p_opt != 0:
+                sens_rel = (rmse_forward - rmse_optimal) / rmse_optimal / perturbation
+                sensitivities_rel[name] = sens_rel
+            else:
+                sensitivities_rel[name] = 0.0
+        else:
+            sensitivities_abs[name] = 0.0
+            sensitivities_rel[name] = 0.0
+    
+    # Normalize sensitivities (sum of absolute values = 1)
+    abs_values = [abs(v) for v in sensitivities_abs.values()]
+    sum_abs = sum(abs_values) if sum(abs_values) > 0 else 1.0
+    sensitivities_norm = {
+        name: abs(sensitivities_abs[name]) / sum_abs 
+        for name in param_names
+    }
+    
+    return {
+        'absolute_sensitivities': sensitivities_abs,
+        'relative_sensitivities': sensitivities_rel,
+        'normalized_sensitivities': sensitivities_norm
+    }
+
+
+def optimize_parameters(params, observed_pd, method='L-BFGS-B', verbose=True):
+    """
+    Optimize parameters to minimize RMSE.
+    
+    Parameters
+    ----------
+    params : dict
+        Dictionary containing all input parameters, including optimization flags
+    observed_pd : pandas.DataFrame
+        DataFrame with observed data, indexed by depth [m]
+    method : str, optional
+        Optimization method (default: 'L-BFGS-B')
+    verbose : bool, optional
+        Print progress information (default: True)
+        
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        - 'params_optimal': optimized parameters dictionary
+        - 'rmse_optimal': optimal RMSE value
+        - 'optimization_result': scipy optimization result object
+    """
+    from scipy.optimize import minimize
+    
+    # Identify parameters to optimize
+    param_names = []
+    param_bounds = []
+    param_indices = {}
+    initial_values = []
+    
+    idx = 0
+    if params.get('L_solve', False):
+        param_names.append('L')
+        bounds = (params['L_min'], params['L_max'])
+        param_bounds.append(bounds)
+        param_indices['L'] = idx
+        initial_val = params.get('L', (bounds[0] + bounds[1]) / 2)
+        initial_val = np.clip(initial_val, bounds[0], bounds[1])
+        initial_values.append(initial_val)
+        idx += 1
+    
+    if params.get('v_solve', False):
+        param_names.append('v')
+        bounds = (params['v_min'], params['v_max'])
+        param_bounds.append(bounds)
+        param_indices['v'] = idx
+        initial_val = params.get('v', (bounds[0] + bounds[1]) / 2)
+        initial_val = np.clip(initial_val, bounds[0], bounds[1])
+        initial_values.append(initial_val)
+        idx += 1
+    
+    if params.get('D_m_solve', False):
+        param_names.append('D_m')
+        bounds = (params['D_m_min'], params['D_m_max'])
+        param_bounds.append(bounds)
+        param_indices['D_m'] = idx
+        initial_val = params.get('D_m', (bounds[0] + bounds[1]) / 2)
+        initial_val = np.clip(initial_val, bounds[0], bounds[1])
+        initial_values.append(initial_val)
+        idx += 1
+    
+    if params.get('alpha_L_solve', False):
+        param_names.append('alpha_L')
+        bounds = (params['alpha_L_min'], params['alpha_L_max'])
+        param_bounds.append(bounds)
+        param_indices['alpha_L'] = idx
+        initial_val = params.get('alpha_L', (bounds[0] + bounds[1]) / 2)
+        initial_val = np.clip(initial_val, bounds[0], bounds[1])
+        initial_values.append(initial_val)
+        idx += 1
+    
+    if len(param_names) == 0:
+        raise ValueError("At least one parameter must have *_solve=True")
+    
+    if verbose:
+        print(f"Optimizing {len(param_names)} parameter(s): {', '.join(param_names)}")
+        print(f"Initial values: {dict(zip(param_names, initial_values))}")
+    
+    # Storage for iteration history
+    iteration_history = []
+    
+    # Objective function
+    def objective(x):
+        # Create a copy of params and update with current optimization values
+        params_test = params.copy()
+        for name, i in param_indices.items():
+            params_test[name] = x[i]
+        
+        # Calculate RMSE
+        rmse = calculate_rmse(params_test, observed_pd)
+        
+        if rmse is None:
+            # Return a large value if RMSE calculation fails
+            return 1e10
+        
+        return rmse
+    
+    # Callback function to track iterations
+    def callback(x):
+        # Calculate RMSE for current parameters
+        rmse = objective(x)
+        
+        # Store parameter values and RMSE
+        param_dict = {name: x[param_indices[name]] for name in param_names}
+        iteration_history.append({
+            'iteration': len(iteration_history),
+            'rmse': rmse,
+            **param_dict
+        })
+    
+    # Perform optimization
+    if verbose:
+        print("Starting optimization...")
+    
+    # Record initial values
+    callback(initial_values)
+    
+    result = minimize(
+        objective,
+        initial_values,
+        method=method,
+        bounds=param_bounds,
+        callback=callback,
+        options={'maxiter': 1000, 'disp': verbose}
+    )
+    
+    # Record final values (callback may not be called for final iteration)
+    final_rmse = result.fun
+    final_params = {name: result.x[param_indices[name]] for name in param_names}
+    if len(iteration_history) == 0 or iteration_history[-1]['rmse'] != final_rmse:
+        iteration_history.append({
+            'iteration': len(iteration_history),
+            'rmse': final_rmse,
+            **final_params
+        })
+    
+    if verbose:
+        print(f"Optimization complete!")
+        print(f"  Success: {result.success}")
+        print(f"  Message: {result.message}")
+        print(f"  Final RMSE: {result.fun:.6f}")
+        print(f"  Iterations: {result.nit}")
+    
+    # Create optimized parameters dictionary
+    params_optimal = params.copy()
+    for name, i in param_indices.items():
+        params_optimal[name] = result.x[i]
+        if verbose:
+            print(f"  Optimal {name}: {result.x[i]:.6g}")
+    
+    # Calculate parameter sensitivities
+    sensitivities = calculate_parameter_sensitivities(
+        params_optimal, observed_pd, param_names, param_indices, result.fun
+    )
+    
+    return {
+        'params_optimal': params_optimal,
+        'rmse_optimal': result.fun,
+        'optimization_result': result,
+        'param_names': param_names,
+        'optimal_values': {name: result.x[param_indices[name]] for name in param_names},
+        'iteration_history': iteration_history,
+        'sensitivities': sensitivities
+    }
+

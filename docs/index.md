@@ -16,6 +16,8 @@ This code was developed by Norm Jones [njones61@gmail.com](mailto:njones61@gmail
 
 - **Transient solver**: Numerical solution using finite difference methods (explicit, implicit, Crank–Nicolson)
 - **Steady-state solver**: Closed-form analytical solution with Dirichlet boundaries
+- **Parameter calibration**: Automated optimization to fit model parameters to observed data
+- **Sensitivity analysis**: Quantify parameter importance and model sensitivity
 - **Flexible Parameters**: Test various scenarios including:
   - Seepage velocity
   - Concentration differences
@@ -31,6 +33,7 @@ This code was developed by Norm Jones [njones61@gmail.com](mailto:njones61@gmail
 
 - [Theory](theory.md): Detailed description of the governing equations and finite difference solution methods
 - [Example](example.md): Complete working example with code and visualization
+- [Calibration](calibrate.md): Parameter estimation and sensitivity analysis guide
 - [API](api.md): Auto-generated API reference (mkdocstrings)
 
 ## Quick Start

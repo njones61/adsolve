@@ -37,5 +37,6 @@ nav:
   - Home: index.md
   - Theory: theory.md
   - Example: example.md
+  - Calibration: calibrate.md
   - API: api.md
 

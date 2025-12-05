@@ -21,7 +21,7 @@ def main():
         # Physical domain
         'L': 5.0,              # Column length [m]
 
-        'plot_depth': 1.0,     # Depth to plot concentration profile. If omitted, plot to L [m].
+        'plot_depth': 2.0,     # Depth to plot concentration profile. If omitted, plot to L [m].
         
         # Hydraulic parameters
         'v': 0.000667,         # Seepage velocity (pore water velocity) [m/d]
@@ -34,8 +34,8 @@ def main():
         'C_lake': 350.0,       # Lake concentration at top [M/L³]
         'C_gw': 20.0,          # Groundwater concentration at bottom [M/L³]
         
-        # Numerical parameters
-        'N': 100,              # Number of grid points
+        # Plotting parameters
+        'N': 100,              # Number of points for plotting (evaluated over plot_depth)
     
 
     }

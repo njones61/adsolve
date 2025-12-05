@@ -47,8 +47,8 @@ def main():
         'C_lake': 350.0,       # Lake concentration at top [M/L³]
         'C_gw': 20.0,          # Groundwater concentration at bottom [M/L³]
         
-        # Numerical parameters
-        'N': 200,              # Number of grid points
+        # Plotting parameters
+        'N': 200,              # Number of points for plotting (evaluated over plot_depth)
 
     }
     

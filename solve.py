@@ -467,7 +467,57 @@ def solve_trans(params, method='crank_nicolson', verbose=True):
     return result
 
 
-def solve_ss(params, verbose=True):
+def evaluate_ss_at_points(params, z_points):
+    """
+    Evaluate the steady-state analytical solution at arbitrary z points.
+    
+    Parameters
+    ----------
+    params : dict
+        Dictionary containing all input parameters (must have derived parameters calculated)
+    z_points : array-like
+        Depths at which to evaluate the solution [m]
+        
+    Returns
+    -------
+    numpy.ndarray
+        Concentration values at z_points
+    """
+    # Extract needed parameters
+    L = params['L']
+    D_eff = params['D_eff']
+    v = params['v']
+    C_lake = params['C_lake']
+    C_gw = params['C_gw']
+    
+    z_points = np.asarray(z_points)
+    
+    # Global Péclet number
+    Pe = v * L / D_eff if D_eff != 0 else np.inf
+    
+    # Handle small Pe with linear limit to avoid 0/0
+    if np.isfinite(Pe) and abs(Pe) < 1e-10:
+        # Linear interpolation between boundaries
+        C = C_lake + (C_gw - C_lake) * (z_points / L)
+    else:
+        # General analytical solution
+        # Avoid numerical issues if denominator is tiny
+        denom = 1.0 - np.exp(-Pe)
+        # If denom is too small, fall back to linear
+        if not np.isfinite(denom) or abs(denom) < 1e-14:
+            C = C_lake + (C_gw - C_lake) * (z_points / L)
+        else:
+            C = C_lake + (C_gw - C_lake) * (1.0 - np.exp(-Pe * z_points / L)) / denom
+    
+    # Enforce boundary values exactly at z=0 and z=L, and for points outside domain
+    tol = 1e-12
+    C = np.where(z_points <= tol, C_lake, C)  # z <= 0 or very close to 0
+    C = np.where(z_points >= L - tol, C_gw, C)  # z >= L or very close to L
+    
+    return C
+
+
+def solve_ss(params, verbose=True, z_points=None):
     """
     Compute the steady-state solution to the 1D advection-diffusion equation
     with Dirichlet boundary conditions using the analytical expression.
@@ -476,57 +526,60 @@ def solve_ss(params, verbose=True):
     ----------
     params : dict
         Dictionary containing all input parameters. Time-related parameters
-        (e.g., 'delta_t', 't_max') are ignored.
+        (e.g., 'delta_t', 't_max') are ignored. If 'plot_depth' is provided and
+        z_points is None, the grid will be created over plot_depth instead of L.
     verbose : bool, optional
         Print summary information (default: True)
+    z_points : array-like, optional
+        Specific depths at which to evaluate. If None, creates a grid using N.
+        If provided, N is ignored.
     
     Returns
     -------
     dict
         Dictionary containing:
-        - 'C': steady concentration array [N+1]
-        - 'z': spatial grid [N+1]
+        - 'C': steady concentration array
+        - 'z': spatial grid (or z_points if provided)
         - 'params': updated parameters dictionary (with derived values)
     """
     # Calculate derived parameters
     params = calculate_derived_parameters(params)
     
     # Extract needed parameters
-    N = params['N']
     L = params['L']
     D_eff = params['D_eff']
     v = params['v']
-    C_lake = params['C_lake']
-    C_gw = params['C_gw']
-    
-    # Spatial grid
-    z = np.linspace(0, L, N + 1)
     
     # Global Péclet number
     Pe = v * L / D_eff if D_eff != 0 else np.inf
     params['Pe_global'] = Pe
     
-    # Handle small Pe with linear limit to avoid 0/0
-    if np.isfinite(Pe) and abs(Pe) < 1e-10:
-        # Linear interpolation between boundaries
-        C = C_lake + (C_gw - C_lake) * (z / L)
+    # If z_points provided, use them directly
+    if z_points is not None:
+        z = np.asarray(z_points)
+        C = evaluate_ss_at_points(params, z)
     else:
-        # General analytical solution
-        # Avoid numerical issues if denominator is tiny
-        denom = 1.0 - np.exp(-Pe)
-        # If denom is too small, fall back to linear
-        if not np.isfinite(denom) or abs(denom) < 1e-14:
-            C = C_lake + (C_gw - C_lake) * (z / L)
+        # Create grid - use plot_depth if available, otherwise L
+        plot_depth = params.get('plot_depth', None)
+        if plot_depth is not None:
+            try:
+                plot_depth = float(plot_depth)
+                if plot_depth > 0 and plot_depth <= L:
+                    depth_max = plot_depth
+                else:
+                    depth_max = L
+            except (ValueError, TypeError):
+                depth_max = L
         else:
-            C = C_lake + (C_gw - C_lake) * (1.0 - np.exp(-Pe * z / L)) / denom
-    
-    # Enforce boundary values exactly
-    C[0] = C_lake
-    C[-1] = C_gw
+            depth_max = L
+        
+        N = params.get('N', 100)
+        z = np.linspace(0, depth_max, N + 1)
+        C = evaluate_ss_at_points(params, z)
     
     if verbose:
         print("Steady-state solution computed.")
-        print(f"Grid points: {N+1}")
+        print(f"Evaluation points: {len(z)}")
         print(f"Péclet number (global): {params['Pe_global']:.6f}")
     
     return {
@@ -539,6 +592,9 @@ def solve_ss(params, verbose=True):
 def calculate_rmse(params, observed_pd, depth_limit=None):
     """
     Calculate RMSE between simulated and observed concentrations.
+    
+    Evaluates the analytical steady-state solution directly at observed depths
+    (no grid discretization or interpolation needed).
     
     Parameters
     ----------
@@ -555,11 +611,8 @@ def calculate_rmse(params, observed_pd, depth_limit=None):
         RMSE value, or None if calculation fails
     """
     try:
-        # Compute steady-state solution
-        result = solve_ss(params, verbose=False)
-        C = result['C']
-        z = result['z']
-        params = result['params']
+        # Calculate derived parameters (needed for analytical evaluation)
+        params = calculate_derived_parameters(params)
         
         # Get specie name
         specie_val = params.get('specie')
@@ -581,26 +634,21 @@ def calculate_rmse(params, observed_pd, depth_limit=None):
             return None
         
         # Determine depth limit
-        if depth_limit is None:
-            depth_limit = params.get('plot_depth', params.get('L', z[-1]))
-        try:
-            depth_limit = float(depth_limit)
-        except Exception:
-            depth_limit = z[-1]
-        
-        L_val = params.get('L', z[-1])
+        L_val = params.get('L', None)
         try:
             L_val = float(L_val)
-        except Exception:
-            L_val = z[-1]
+        except (ValueError, TypeError):
+            return None
+        
+        if depth_limit is None:
+            depth_limit = params.get('plot_depth', L_val)
+        try:
+            depth_limit = float(depth_limit)
+        except (ValueError, TypeError):
+            depth_limit = L_val
         
         if depth_limit <= 0 or depth_limit > L_val:
             depth_limit = L_val
-        
-        # Slice model arrays to requested depth
-        mask = z <= depth_limit
-        z_plot = z[mask]
-        C_plot = C[mask]
         
         # Restrict observed points to depth_limit
         observed_slice = observed_pd[observed_pd.index <= depth_limit]
@@ -612,13 +660,8 @@ def calculate_rmse(params, observed_pd, depth_limit=None):
         obs_depths = observed_slice.index.values.astype(float)
         obs_values = observed_slice[obs_col].values.astype(float)
         
-        # Interpolate simulated profile to observation depths
-        try:
-            from scipy.interpolate import PchipInterpolator
-            interp_fn = PchipInterpolator(z_plot, C_plot, extrapolate=False)
-            sim_at_obs = interp_fn(obs_depths)
-        except Exception:
-            sim_at_obs = np.interp(obs_depths, z_plot, C_plot)
+        # Evaluate analytical solution directly at observed depths (no grid, no interpolation)
+        sim_at_obs = evaluate_ss_at_points(params, obs_depths)
         
         # Compute RMSE over valid pairs
         valid_mask = np.isfinite(sim_at_obs) & np.isfinite(obs_values)

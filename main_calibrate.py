@@ -16,7 +16,7 @@ def main():
     params = {
 
         # Solute specie (for plotting, data access)
-        'specie': 'Sulfate',
+        'specie': 'Na+',
 
         'plot_depth': 2.0,     # Depth to plot concentration profile. If omitted, plot to L [m].
 
@@ -33,9 +33,9 @@ def main():
         'v_max': 0.01,
 
         # Transport parameters
-        'D_m': 0.0000175,       # Molecular diffusion coefficient [m²/d]
+        'D_m': 1.33e-9,       # Molecular diffusion coefficient [m²/d]
         'D_m_solve': True,
-        'D_m_min': 0.0000001,
+        'D_m_min': 1e-12,
         'D_m_max': 0.001,
 
         'alpha_L': 0.2,        # Longitudinal dispersivity [m]
@@ -44,8 +44,8 @@ def main():
         'alpha_L_max': 1.0,
 
         # Boundary conditions
-        'C_lake': 350.0,       # Lake concentration at top [M/L³]
-        'C_gw': 20.0,          # Groundwater concentration at bottom [M/L³]
+        'C_lake': 220,       # Lake concentration at top [M/L³]
+        'C_gw': 136,          # Groundwater concentration at bottom [M/L³]
         
         # Plotting parameters
         'N': 200,              # Number of points for plotting (evaluated over plot_depth)

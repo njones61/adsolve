@@ -16,23 +16,23 @@ def main():
     params = {
 
         # Solute specie (for plotting, data access)
-        'specie': 'Sulfate',
+        'specie': 'd18O',
 
         # Physical domain
         'L': 5.0,              # Column length [m]
 
-        'plot_depth': 2.0,     # Depth to plot concentration profile. If omitted, plot to L [m].
+        'plot_depth': 1.5,     # Depth to plot concentration profile. If omitted, plot to L [m].
         
         # Hydraulic parameters
-        'v': 0.000667,         # Seepage velocity (pore water velocity) [m/d]
+        'v': 1.91781E-05,         # Seepage velocity (pore water velocity) [m/d]
         
         # Transport parameters
-        'D_m': 0.0000175,       # Molecular diffusion coefficient [m²/d]
+        'D_m': 1.4e-9,       # Molecular diffusion coefficient [m²/d]
         'alpha_L': 0.2,        # Longitudinal dispersivity [m]
         
         # Boundary conditions
-        'C_lake': 350.0,       # Lake concentration at top [M/L³]
-        'C_gw': 20.0,          # Groundwater concentration at bottom [M/L³]
+        'C_lake': -7.6,       # Lake concentration at top [M/L³]
+        'C_gw': -16.4,          # Groundwater concentration at bottom [M/L³]
         
         # Plotting parameters
         'N': 100,              # Number of points for plotting (evaluated over plot_depth)
